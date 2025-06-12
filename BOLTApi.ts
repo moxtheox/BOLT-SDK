@@ -377,7 +377,3 @@ export class BOLTApi {
     
 }
 
-const api = new BOLTApi();
-if(await api.authenticate() === eCookieResults.SET) {
-    console.log(await api.GetLoadBoard(BOLTApiLoadBoardShipmentStatus.IN_TRANSIT));
-}
