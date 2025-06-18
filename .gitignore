@@ -36,4 +36,4 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 /secret
 /secrets
 /test
-.vscode
+/.vscode
