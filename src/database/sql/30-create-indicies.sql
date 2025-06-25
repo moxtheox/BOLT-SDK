@@ -28,9 +28,6 @@ ALTER TABLE terminals ADD CONSTRAINT uq_terminals_tms_id UNIQUE (tms_id);
 -- address_types
 ALTER TABLE address_types ADD CONSTRAINT uq_address_types_tms_id UNIQUE (tms_id);
 
--- addresses
-ALTER TABLE addresses ADD CONSTRAINT uq_addresses_tms_id UNIQUE (tms_id);
-
 -- trucks
 ALTER TABLE trucks ADD CONSTRAINT uq_trucks_tms_id UNIQUE (tms_id);
 

@@ -68,7 +68,6 @@ END;
 $$ LANGUAGE plpgsql;
 -- Function to upsert data into the addresses table
 CREATE OR REPLACE FUNCTION upsert_address(
-    p_tms_id INTEGER,
     p_name VARCHAR(255),
     p_street1 VARCHAR(255),
     p_street2 VARCHAR(255),
@@ -109,12 +108,12 @@ BEGIN
     END IF;
 
     INSERT INTO addresses (
-        tms_id, name, street1, street2, city, state, postal_code, phone, email, comments,
+        name, street1, street2, city, state, postal_code, phone, email, comments,
         local_directions, is_active, parent_address_id, latitude, longitude,
         terminal_id, address_type_id
     )
     VALUES (
-        p_tms_id, p_name, p_street1, p_street2, p_city, p_state, p_postal_code, p_phone, p_email, p_comments,
+        p_name, p_street1, p_street2, p_city, p_state, p_postal_code, p_phone, p_email, p_comments,
         p_local_directions, p_is_active, v_parent_address_id, p_latitude, p_longitude,
         v_terminal_id, v_address_type_id
     )

@@ -13,7 +13,6 @@ CREATE TABLE IF NOT EXISTS address_types (
 -- Master table for all addresses, referenced by stops and terminals
 CREATE TABLE IF NOT EXISTS addresses (
     id SERIAL PRIMARY KEY,
-    tms_id INTEGER UNIQUE NOT NULL, -- The original ID from the TMS for this address
     name VARCHAR(255),
     street1 VARCHAR(255),
     street2 VARCHAR(255),
