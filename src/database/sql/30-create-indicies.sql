@@ -14,107 +14,66 @@ BEGIN;
 --------------------------------------------------------------------------------
 
 -- data_suppliers
-ALTER TABLE data_suppliers ADD CONSTRAINT pk_data_suppliers PRIMARY KEY (id);
 ALTER TABLE data_suppliers ADD CONSTRAINT uq_data_suppliers_tms_id UNIQUE (tms_id);
 
 -- users
-ALTER TABLE users ADD CONSTRAINT pk_users PRIMARY KEY (id);
 ALTER TABLE users ADD CONSTRAINT uq_users_tms_id UNIQUE (tms_id);
 
 -- owners
-ALTER TABLE owners ADD CONSTRAINT pk_owners PRIMARY KEY (id);
 ALTER TABLE owners ADD CONSTRAINT uq_owners_tms_id UNIQUE (tms_id);
 
 -- terminals
-ALTER TABLE terminals ADD CONSTRAINT pk_terminals PRIMARY KEY (id);
 ALTER TABLE terminals ADD CONSTRAINT uq_terminals_tms_id UNIQUE (tms_id);
 
 -- address_types
-ALTER TABLE address_types ADD CONSTRAINT pk_address_types PRIMARY KEY (id);
 ALTER TABLE address_types ADD CONSTRAINT uq_address_types_tms_id UNIQUE (tms_id);
 
 -- addresses
-ALTER TABLE addresses ADD CONSTRAINT pk_addresses PRIMARY KEY (id);
 ALTER TABLE addresses ADD CONSTRAINT uq_addresses_tms_id UNIQUE (tms_id);
 
 -- trucks
-ALTER TABLE trucks ADD CONSTRAINT pk_trucks PRIMARY KEY (id);
 ALTER TABLE trucks ADD CONSTRAINT uq_trucks_tms_id UNIQUE (tms_id);
 
 -- trailers
-ALTER TABLE trailers ADD CONSTRAINT pk_trailers PRIMARY KEY (id);
 ALTER TABLE trailers ADD CONSTRAINT uq_trailers_tms_id UNIQUE (tms_id);
 
 -- breadcrumbs
-ALTER TABLE breadcrumbs ADD CONSTRAINT pk_breadcrumbs PRIMARY KEY (id);
 ALTER TABLE breadcrumbs ADD CONSTRAINT uq_breadcrumbs_tms_id UNIQUE (tms_id);
 
 -- stop_types
-ALTER TABLE stop_types ADD CONSTRAINT pk_stop_types PRIMARY KEY (id);
 ALTER TABLE stop_types ADD CONSTRAINT uq_stop_types_tms_id UNIQUE (tms_id);
 
 -- stops
-ALTER TABLE stops ADD CONSTRAINT pk_stops PRIMARY KEY (id);
 ALTER TABLE stops ADD CONSTRAINT uq_stops_tms_id UNIQUE (tms_id);
 
 -- purchase_orders
-ALTER TABLE purchase_orders ADD CONSTRAINT pk_purchase_orders PRIMARY KEY (id);
 ALTER TABLE purchase_orders ADD CONSTRAINT uq_purchase_orders_tms_id UNIQUE (tms_id);
 
 -- shipments
-ALTER TABLE shipments ADD CONSTRAINT pk_shipments PRIMARY KEY (id);
 ALTER TABLE shipments ADD CONSTRAINT uq_shipments_tms_id UNIQUE (tms_id);
 
 -- load_statuses
-ALTER TABLE load_statuses ADD CONSTRAINT pk_load_statuses PRIMARY KEY (id);
 ALTER TABLE load_statuses ADD CONSTRAINT uq_load_statuses_tms_id UNIQUE (tms_id);
 
 -- load_categories
-ALTER TABLE load_categories ADD CONSTRAINT pk_load_categories PRIMARY KEY (id);
 ALTER TABLE load_categories ADD CONSTRAINT uq_load_categories_tms_id UNIQUE (tms_id);
 
 -- loads
-ALTER TABLE loads ADD CONSTRAINT pk_loads PRIMARY KEY (id);
 ALTER TABLE loads ADD CONSTRAINT uq_loads_tms_id UNIQUE (tms_id);
 -- Add unique constraint for load_hash if you decide to implement hashing for deduplication
 -- ALTER TABLE loads ADD CONSTRAINT uq_loads_hash UNIQUE (load_hash);
 
-
 --------------------------------------------------------------------------------
--- 2. Composite Primary Keys for Linking Tables
---------------------------------------------------------------------------------
-
--- load_drivers: A specific driver can be assigned to a specific load only once
-ALTER TABLE load_drivers ADD CONSTRAINT pk_load_drivers PRIMARY KEY (load_id, driver_user_id);
-
--- load_revenues: A load can have multiple revenue items, but only one of each 'type'
--- This ensures that for a given load, there's only one 'Line Haul', one 'Fuel Surcharge', etc.
-ALTER TABLE load_revenues ADD CONSTRAINT pk_load_revenues PRIMARY KEY (load_id, type);
-
--- load_shipments: A specific shipment can be part of a specific load only once
-ALTER TABLE load_shipments ADD CONSTRAINT pk_load_shipments PRIMARY KEY (load_id, shipment_id);
-
--- shipment_stops: A specific stop can be part of a specific shipment only once
--- and stop_order provides uniqueness within a shipment.
-ALTER TABLE shipment_stops ADD CONSTRAINT pk_shipment_stops PRIMARY KEY (shipment_id, stop_id);
--- Consider adding a unique constraint if (shipment_id, stop_order) must be unique
--- ALTER TABLE shipment_stops ADD CONSTRAINT uq_shipment_stops_order UNIQUE (shipment_id, stop_order);
-
--- load_trailers: A specific trailer can be assigned to a specific load only once
-ALTER TABLE load_trailers ADD CONSTRAINT pk_load_trailers PRIMARY KEY (load_id, trailer_id);
-
-
---------------------------------------------------------------------------------
--- 3. Foreign Key Constraints
+-- 2. Foreign Key Constraints
 --------------------------------------------------------------------------------
 
 -- users
-ALTER TABLE users ADD CONSTRAINT fk_users_data_supplier_id
-    FOREIGN KEY (data_supplier_id) REFERENCES data_suppliers(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
+--ALTER TABLE users ADD CONSTRAINT fk_users_data_supplier_id
+--    FOREIGN KEY (data_supplier_id) REFERENCES data_suppliers(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- owners
-ALTER TABLE owners ADD CONSTRAINT fk_owners_data_supplier_id
-    FOREIGN KEY (data_supplier_id) REFERENCES data_suppliers(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
+--ALTER TABLE owners ADD CONSTRAINT fk_owners_data_supplier_id
+--    FOREIGN KEY (data_supplier_id) REFERENCES data_suppliers(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- addresses
 ALTER TABLE addresses ADD CONSTRAINT fk_addresses_parent_address_id
@@ -151,11 +110,11 @@ ALTER TABLE stops ADD CONSTRAINT fk_stops_stop_type_id
 
 -- purchase_orders
 ALTER TABLE purchase_orders ADD CONSTRAINT fk_purchase_orders_agent_user_id
-    FOREIGN KEY (agent_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
+    FOREIGN KEY (agent_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 ALTER TABLE purchase_orders ADD CONSTRAINT fk_purchase_orders_bill_to_address_id
-    FOREIGN KEY (bill_to_address_id) REFERENCES addresses(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
+    FOREIGN KEY (bill_to_id) REFERENCES addresses(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 ALTER TABLE purchase_orders ADD CONSTRAINT fk_purchase_orders_reviewed_by_user_id
-    FOREIGN KEY (reviewed_by_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
+    FOREIGN KEY (reviewed_by_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 
 -- shipments
 ALTER TABLE shipments ADD CONSTRAINT fk_shipments_first_stop_id
@@ -165,9 +124,9 @@ ALTER TABLE shipments ADD CONSTRAINT fk_shipments_last_stop_id
 ALTER TABLE shipments ADD CONSTRAINT fk_shipments_purchase_order_id
     FOREIGN KEY (purchase_order_id) REFERENCES purchase_orders(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 ALTER TABLE shipments ADD CONSTRAINT fk_shipments_hauled_for_owner_id
-    FOREIGN KEY (hauled_for_owner_id) REFERENCES owners(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
+    FOREIGN KEY (hauled_for_id) REFERENCES owners(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 ALTER TABLE shipments ADD CONSTRAINT fk_shipments_origin_created_by_user_id
-    FOREIGN KEY (origin_created_by_user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
+    FOREIGN KEY (origin_created_by_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 ALTER TABLE shipments ADD CONSTRAINT fk_shipments_current_breadcrumb_id
     FOREIGN KEY (current_breadcrumb_id) REFERENCES breadcrumbs(id) ON DELETE SET NULL ON UPDATE NO ACTION;
 
@@ -227,15 +186,16 @@ ALTER TABLE load_trailers ADD CONSTRAINT fk_load_trailers_load_id
 ALTER TABLE load_trailers ADD CONSTRAINT fk_load_trailers_trailer_id
     FOREIGN KEY (trailer_id) REFERENCES trailers(id) ON DELETE RESTRICT ON UPDATE NO ACTION;
 
-
+COMMIT;
+-- End of transaction block
 --------------------------------------------------------------------------------
--- 4. Additional Indexes for Performance
+-- 3. Additional Indexes for Performance
 --------------------------------------------------------------------------------
 
 -- Indexes on common lookup fields, or fields used in JOINs/WHERE clauses that aren't PKs/Unique-constrained
 
 -- users
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users (email); -- Common lookup by email
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users (employee_id); -- Common lookup by employee_id
 
 -- addresses
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_addresses_city_state ON addresses (city, state);
@@ -276,4 +236,3 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_loads_summary ON loads (summary); --
 -- their FKs are part of their composite PK, so indexes are automatically created.
 -- No need to explicitly add more for these specific cases.
 
-COMMIT;

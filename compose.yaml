@@ -1,0 +1,40 @@
+version: '3.8'
+services:
+  bolt-data-db:
+    image: postgres:latest
+    container_name: bolt-data-db
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      PGPORT: ${DATABASE_PORT}
+    volumes:
+      - ./src/database/sql:/docker-entrypoint-initdb.d
+      - bolt-data:/var/lib/postgresql/data
+    ports:
+      - 5432:${DATABASE_PORT}
+    networks:
+      - bolt-data-network
+  
+  bolt-data-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bolt-data-service
+    environment:
+      DATABASE_URL: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@bolt-data-db:${DATABASE_PORT}/${DATABASE_NAME}
+      BOLT_USER_NAME: ${BOLT_USER_NAME}
+      BOLT_USER_PASSWORD: ${BOLT_USER_PASSWORD}
+      BOLT_TENANT_URL: ${BOLT_TENANT_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - bolt-data-db
+    networks:
+      - bolt-data-network
+volumes:
+  bolt-data:
+
+networks:
+  bolt-data-network:
+    driver: bridge

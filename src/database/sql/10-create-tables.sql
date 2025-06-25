@@ -95,7 +95,7 @@ ON CONFLICT (tms_id) DO NOTHING; -- Ensure it's only inserted once
 
 -- Master table for owners (e.g., truck owners, general owners)
 CREATE TABLE IF NOT EXISTS owners (
-    id SERIAL PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     tms_id INTEGER UNIQUE, -- The original ID from the TMS for this owner (can be null for 'No Owner')
     name VARCHAR(255) NOT NULL UNIQUE, -- E.g., "No Owner", "Company Name", "Individual Name" (from truckowners.name)
     contact_phone VARCHAR(50),
@@ -105,6 +105,10 @@ CREATE TABLE IF NOT EXISTS owners (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+INSERT INTO owners (id, name, tms_id)
+VALUES (-1, 'No Owner', NULL) -- Default owner for trucks/trailers without a specific owner
+ON CONFLICT (id) DO NOTHING;
 
 -- Master table for trucks
 CREATE TABLE IF NOT EXISTS trucks (
@@ -128,7 +132,7 @@ CREATE TABLE IF NOT EXISTS trucks (
     reg_country VARCHAR(100),
     reg_state VARCHAR(3),
     reg_tag VARCHAR(100),
-    owned_by_id INTEGER NOT NULL DEFAULT (SELECT id FROM owners WHERE name = 'No Owner'), -- FK to owners(id)
+    owned_by_id INTEGER NOT NULL DEFAULT -1, -- FK to owners(id)
     primary_terminal_id INTEGER, -- FK to terminals(id)
     last_breadcrumb_id INTEGER, -- FK to breadcrumbs(id) for the latest known location
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -157,7 +161,7 @@ CREATE TABLE IF NOT EXISTS trailers (
     reg_country VARCHAR(100),
     reg_state VARCHAR(3),
     reg_tag VARCHAR(100),
-    owned_by_id INTEGER NOT NULL DEFAULT (SELECT id FROM owners WHERE name = 'No Owner'), -- FK to owners(id)
+    owned_by_id INTEGER NOT NULL DEFAULT -1, -- FK to owners(id)
     primary_terminal_id INTEGER, -- FK to terminals(id)
     last_breadcrumb_id INTEGER, -- FK to breadcrumbs(id) for the latest known location
     type JSONB, -- The 'type' object, captured as JSONB (was empty in example, but good for future proofing)
@@ -343,14 +347,15 @@ CREATE TABLE IF NOT EXISTS load_drivers (
 
 -- Table for Load Revenue (normalized from load_board.summary.revenue array)
 CREATE TABLE IF NOT EXISTS load_revenues (
-    id SERIAL PRIMARY KEY,
+    id SERIAL UNIQUE NOT NULL,
     load_id INTEGER NOT NULL, -- FK to loads(id)
     type VARCHAR(50) NOT NULL, -- E.g., 'front_haul', 'back_haul'
     fuel_surcharge NUMERIC(10, 2),
     miscellaneous NUMERIC(10, 2),
     accessorial NUMERIC(10, 2),
     line_haul NUMERIC(10, 2),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    PRIMARY KEY (id, load_id, type) -- Composite primary key to ensure uniqueness
 );
 
 -- Link table for loads and shipments (many-to-many)
