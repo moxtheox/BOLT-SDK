@@ -1,5 +1,18 @@
 import type { CoreContact } from "../DBcore/coreDbInterfaces";
-import type { BOLTActive, BOLTCodeable, BOLTCommentable, BOLTCoreAddress, BOLTCoreArrivalTimes, BOLTCoreCodeIdNamed, BOLTCoreCurrentLocationRecord, BOLTCoreIdentifiable, BOLTCoreLoadTruck, BOLTdbEntity, BOLTLocalDirections, BOLTNamed, BOLTrelationalAddress, TerminalIdentifiable } from "./BOLTCore";
+import type { BOLTActive, 
+    BOLTCodeable, 
+    BOLTCommentable, 
+    BOLTCoreAddress, 
+    BOLTCoreArrivalTimes, 
+    BOLTCoreCodeIdNamed, 
+    BOLTCoreCurrentLocationRecord, 
+    BOLTCoreIdentifiable, 
+    BOLTCoreLoadTruck, 
+    BOLTdbEntity, 
+    BOLTLocalDirections, 
+    BOLTNamed, 
+    BOLTrelationalAddress, 
+    TerminalIdentifiable } from "./BOLTCore";
 
 export interface LocationType extends BOLTCoreCodeIdNamed {
 }
@@ -172,3 +185,14 @@ BOLTActive {
     first_shipment_id:string,
     truck:BOLTCoreLoadTruck
 }
+
+export interface BOLTterminal extends Location {}
+
+export interface BOLTeld extends BOLTCoreIdentifiable,
+BOLTActive {
+    dataSupplier:string
+}
+
+export interface BOLTLoadStatuses extends BOLTCoreIdentifiable,
+BOLTNamed,
+BOLTCodeable {}
