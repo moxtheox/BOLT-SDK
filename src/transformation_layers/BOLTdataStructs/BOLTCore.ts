@@ -223,6 +223,7 @@ CoreContact,
 BOLTCoreCommentable,
 BOLTCoreActive,
 BOLTCoreLocalDirections,
+BOLTCoreNamed,
 BOLTCoreTerminalIdentifiable {}
 
 export interface BOLTCoreLoadAggregates extends BOLTdbEntity {
@@ -234,18 +235,6 @@ export interface BOLTCoreLoadAggregates extends BOLTdbEntity {
     pieces:number,
 }
 
-export interface BOLTCoreLoadStop extends BOLTCoreStop {
-    location:BOLTCoreLocation,
-    number:number,
-    contact?:string,
-    time_from_last_stop:number,
-    actual:BOLTCoreArrivalTimes,
-    aggregates:BOLTCoreLoadAggregates,
-    scheduled:BOLTCoreArrivalTimes,
-    bill_of_lading?:string,
-    stop_type:BOLTCoreStopType,
-    distance_from_last_stop:number,
-}
 
 export interface BOLTCoreStopRules extends BOLTdbEntity {
     change_truck:boolean,

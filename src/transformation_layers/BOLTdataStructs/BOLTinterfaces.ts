@@ -5,7 +5,6 @@ import type { BOLTCoreLoadTruck,
     BOLTCoreLoadData,
     BOLTCoreUser,
     BOLTCoreDataSupplier,
-    BOLTCoreLoadStop,
     BOLTCoreLoadCategory,
     BOLTCoreStop
 } from "./BOLTCore";
@@ -63,11 +62,11 @@ export interface BOLTUser extends BOLTCoreUser {
 }
 
 export interface BOLTLoad extends BOLTCoreLoadData {
-    next_stop?:BOLTCoreLoadStop,
-    current_stop?:BOLTCoreLoadStop,
-    first_stop?:BOLTCoreLoadStop,
+    next_stop?:BOLTCoreStop,
+    current_stop?:BOLTCoreStop,
+    first_stop?:BOLTCoreStop,
     drivers:string[],
-    last_stop?:BOLTCoreLoadStop,
+    last_stop?:BOLTCoreStop,
     hauling_terminal:BOLTCoreLocation,
     origination_terminal:BOLTCoreLocation,
     category:BOLTLoadCategory,
@@ -105,11 +104,14 @@ export interface BOLTLoadBoardLoadCategory extends BOLTCoreLoadCategory {
     code?:string,
 }
 
-export interface BOLTLoadBoardStop extends BOLTCoreStop {
+export interface BOLTLoadBoardEntry extends BOLTCoreLoadData {
     most_recent_comment?:string | BOLTdbEntity,
+    driver_ids?:number[],
+    eta?:string,
+    origination_terminal_id?:string,
+    hauling_terminal_id?:number,
 }
 
 export interface BOLTLoadBoard extends BOLTCoreLoadData {
     
-
 }
