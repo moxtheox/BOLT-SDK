@@ -1,78 +1,75 @@
 -- File: src/database/sql/new_tables.sql
 -- This file contains the SQL statements to create new tables in the database.
 
--- Function to update dependent is_active fields
-CREATE OR REPLACE FUNCTION update_dependent_is_active()
-RETURNS TRIGGER AS $$
-DECLARE
-    target_table TEXT := TG_ARGV[0];
-    join_column TEXT := TG_ARGV[1];
+CREATE OR REPLACE FUNCTION string_has_length(p_string TEXT)
+RETURNS BOOLEAN AS $$
 BEGIN
-    EXECUTE format('UPDATE %I SET is_active = $1.is_active WHERE %I = $1.serial_id',
-                   target_table, join_column) -- %I is used for identifiers, and SQL injection is avoided by using parameterized queries
-    USING NEW;
-    RETURN NEW;
+    RETURN p_string IS NOT NULL AND LENGTH(TRIM(p_string)) > 0;
 END;
 $$ LANGUAGE plpgsql;
 
--- Generic function to update dependent is_active fields by a given ID
-CREATE OR REPLACE FUNCTION update_dependent_is_active_by_id(
-    target_table_name TEXT,
-    join_column_name TEXT,
-    entity_serial_id_to_update INTEGER,
-    new_is_active_status BOOLEAN
-)
-RETURNS VOID AS $$
-BEGIN
-    EXECUTE format('UPDATE %I SET is_active = %L WHERE %I = %L',
-                   target_table_name,
-                   new_is_active_status,
-                   join_column_name,
-                   entity_serial_id_to_update);
-END;
-$$ LANGUAGE plpgsql;
 
--- Trigger function for updates to authority active status.
--- Multiple dependent tables can be updated by calling the generic function.
-CREATE OR REPLACE FUNCTION master_authority_is_active_update()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION insert_stop_type(p_stop_type_name VARCHAR(50))
+
+RETURNS INTEGER AS $$
 DECLARE
-    contact_id INTEGER;
+    v_stop_type_id INTEGER;
 BEGIN
-    -- Call the generic function with the specific arguments dependent tables.
-    PERFORM update_dependent_is_active('addresses', 'entity_serial_id');
-
-    PERFORM update_dependent_is_active('divisions', 'authority_id');
-    
-    IF NEW.authority_contacts IS NOT NULL AND array_length(NEW.authority_contacts, 1) > 0 THEN
-        FOREACH contact_id IN ARRAY NEW.authority_contacts LOOP
-            PERFORM update_dependent_is_active_by_id('contacts', 'serial_id', contact_id, NEW.is_active);
-        END LOOP;
+    IF NOT string_has_length(p_stop_type_name) THEN
+        RAISE EXCEPTION 'Stop type name cannot be null or empty';
     END IF;
-
-    RETURN NEW;
+    INSERT INTO lu_stop_types (stop_type_name)
+    VALUES (TRIM(p_stop_type_name))
+    RETURNING serial_id INTO v_stop_type_id;
+    RETURN v_stop_type_id;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION master_division_is_active_update()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION insert_address_type(p_address_type_name VARCHAR(50))
+RETURNS INTEGER AS $$
 DECLARE
-    contact_id INTEGER;
+    v_address_type_id INTEGER;
 BEGIN
-    -- Call the generic function with the specific arguments for dependent tables.
-    PERFORM update_dependent_is_active('addresses', 'entity_serial_id');
-    
-    IF NEW.division_contacts IS NOT NULL AND array_length(NEW.division_contacts, 1) > 0 THEN
-        FOREACH contact_id IN ARRAY NEW.division_contacts LOOP
-            PERFORM update_dependent_is_active_by_id('contacts', 'serial_id', contact_id, NEW.is_active);
-        END LOOP;
+    IF NOT string_has_length(p_address_type_name) THEN
+        RAISE EXCEPTION 'Address type name cannot be null or empty';
     END IF;
-    
-    PERFORM update_dependent_is_active('drivers', 'division_id');
-    
-    RETURN NEW;
+    INSERT INTO lu_address_types (address_type_name)
+    VALUES (TRIM(p_address_type_name))
+    RETURNING serial_id INTO v_address_type_id;
+    RETURN v_address_type_id;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insert_location_source(p_location_source_name VARCHAR(50))
+RETURNS INTEGER AS $$
+DECLARE
+    v_location_source_id INTEGER;
+BEGIN
+    IF NOT string_has_length(p_location_source_name) THEN
+        RAISE EXCEPTION 'Location source name cannot be null or empty';
+    END IF;
+    INSERT INTO lu_location_sources (location_source_name)
+    VALUES (TRIM(p_location_source_name))
+    RETURNING serial_id INTO v_location_source_id;
+    RETURN v_location_source_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insert_contact_type(p_contact_type_name VARCHAR(50))
+RETURNS INTEGER AS $$
+DECLARE
+    v_contact_type_id INTEGER;
+BEGIN
+    IF NOT string_has_length(p_contact_type_name) THEN
+        RAISE EXCEPTION 'Contact type name cannot be null or empty';
+    END IF;
+    INSERT INTO lu_contact_types (contact_type_name)
+    VALUES (TRIM(p_contact_type_name))
+    RETURNING serial_id INTO v_contact_type_id;
+    RETURN v_contact_type_id;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- Master Lookup Table for Stop Types
 -- This table contains the types of stops (e.g. Pickup, Delivery, Fuel, Rest).
@@ -157,12 +154,12 @@ CREATE TABLE IF NOT EXISTS contacts (
     contact_type INTEGER NOT NULL, -- INT indicating the type of contact (e.g. Driver, Customer, Delivery Notification)
     FOREIGN KEY (contact_type) REFERENCES lu_contact_types(serial_id),
     email VARCHAR(255),
-    CONSTRAINT chk_email_format CHECK (email ~* '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$' OR email IS NULL)
     mobile_phone VARCHAR(10),
-    CONSTRAINT chk_phone_number_format CHECK (mobile_phone ~ '^[0-9]{10}$' OR mobile_phone IS NULL),
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    CONSTRAINT chk_email_format CHECK (email ~* '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$' OR email IS NULL),
+    CONSTRAINT chk_phone_number_format CHECK (mobile_phone ~ '^[0-9]{10}$' OR mobile_phone IS NULL)
 );
 
 -- Insert an unavailable contact record
@@ -193,8 +190,10 @@ CREATE TABLE IF NOT EXISTS geo_locations (
 );
 
 
--- TODO: Index to speed up queries that filter by location_source
--- TODO: Index to speed up queries that filter by currency: recorded_at.
+-- Index to speed up queries that filter by location_source
+CREATE INDEX IF NOT EXISTS idx_geo_locations_location_source ON geo_locations (location_source) WHERE is_active = TRUE;
+-- Index to speed up queries that filter by currency: recorded_at.
+CREATE INDEX IF NOT EXISTS idx_geo_locations_recorded_at ON geo_locations (recorded_at DESC) WHERE is_active = TRUE;
 
 -- Insert a default location record
 -- This record is used to represent a default or unknown location.
@@ -210,7 +209,6 @@ ON CONFLICT (serial_id) DO UPDATE SET
 CREATE TABLE IF NOT EXISTS addresses (
     serial_id SERIAL PRIMARY KEY,
     address_contact_ids INTEGER [],
-    FOREIGN KEY (address_contact_ids) REFERENCES contacts(serial_id),
     street_1 VARCHAR(255) NOT NULL,
     street_2 VARCHAR(255),
     city VARCHAR(100) NOT NULL,
@@ -226,8 +224,6 @@ CREATE TABLE IF NOT EXISTS addresses (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- TODO: add a trigger to update location_id is_active when address is_active is updated.
--- TODO: add a trigger to update location_id when street_1, street_2, city, state, postal_code, or country is updated.
 
 -- Partial index to speed up queries that filter by is_active
 -- This index is useful for queries that retrieve only active addresses.
@@ -246,11 +242,6 @@ CREATE TABLE IF NOT EXISTS authorities (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Trigger to update dependent is_active fields when authority is activated/deactivated.
-CREATE TRIGGER update_authority_is_active
-AFTER UPDATE OF is_active ON authorities
-FOR EACH ROW
-EXECUTE FUNCTION master_authority_is_active_update();
 
 -- Master Divisions Table
 CREATE TABLE IF NOT EXISTS divisions (
@@ -266,11 +257,6 @@ CREATE TABLE IF NOT EXISTS divisions (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Trigger to update dependent is_active fields when division is activated/deactivated.
-CREATE TRIGGER update_division_is_active
-AFTER UPDATE OF is_active ON divisions
-FOR EACH ROW
-EXECUTE FUNCTION master_division_is_active_update();
 
 -- Insert an unavailable division record
 -- This record is used to represent a division that is not currently known or available.
@@ -309,7 +295,6 @@ CREATE TABLE IF NOT EXISTS trailers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 )
 
--- TODO: Add trigger that updates attached_to_entity_id to 0 and detaches trailer from truck when trailer is deactivated.
 
 -- Master Truck Table
 -- This table contains all trucks, including those that are not currently in use.
@@ -470,14 +455,10 @@ CREATE TABLE IF NOT EXISTS loads (
     serial_id SERIAL PRIMARY KEY,
     load_purchase_orders VARCHAR(255) [],
     load_stop_ids BIGINT [],
-    FOREIGN KEY (load_stop_ids) REFERENCES stops(serial_id),
     tms_pro_number VARCHAR(255) UNIQUE,
     assigned_driver_ids INTEGER [],
-    FOREIGN KEY (assigned_driver_ids) REFERENCES drivers(serial_id),
     assigned_truck_ids INTEGER [],
-    FOREIGN KEY (assigned_truck_ids) REFERENCES trucks(serial_id),
     trailer_ids INTEGER [],
-    FOREIGN KEY (trailer_ids) REFERENCES trailers(serial_id),
     terminal_id INTEGER NOT NULL DEFAULT -1, -- -1 indicates no terminal
     FOREIGN KEY (terminal_id) REFERENCES terminals(serial_id),
     division_id INTEGER NOT NULL DEFAULT -1, -- -1 indicates no division
@@ -490,5 +471,5 @@ CREATE TABLE IF NOT EXISTS loads (
 CREATE INDEX IF NOT EXISTS idx_loads_tms_pro_number ON loads (tms_pro_number) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_loads_terminal_id ON loads (terminal_id) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_loads_division_id ON loads (division_id) WHERE is_active = TRUE;
-CREATE INDEX IF NOT EXISTS idx_loads_assigned_driver_ids_gin ON loads USING GIN; -- GIN index for array column
-CREATE INDEX IF NOT EXISTS idx_loads_assigned_truck_ids_gin ON loads USING GIN; -- GIN index for array column
+CREATE INDEX IF NOT EXISTS idx_loads_assigned_driver_ids_gin ON loads USING GIN (assigned_driver_ids); -- GIN index for array column
+CREATE INDEX IF NOT EXISTS idx_loads_assigned_truck_ids_gin ON loads USING GIN (assigned_truck_ids); -- GIN index for array column
