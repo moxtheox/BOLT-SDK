@@ -32,7 +32,7 @@ export class BOLTApi {
         }
         // Validate that the required variables are set
         if (!BOLTApi.tenantUrl || process.env.BOLT_TOKEN === undefined) {
-            throw new Error('Missing required variables: BOLT_TENANT_URL, BOLT_USER_NAME ');
+            throw new Error('Missing required variables: BOLT_TENANT_URL, BOLT_TOKEN');
         }
     }
     /**
