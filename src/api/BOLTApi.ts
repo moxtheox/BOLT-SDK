@@ -352,10 +352,7 @@ export class BOLTApi {
         headers.set('Content-Type', 'application/json');
         headers.set('Accept', '*/*');
         if (includeAuth) {
-            const cookie = BOLTCookieManager.getCookie();
-            if (cookie) {
-                headers.set('Cookie', cookie);
-            }
+            headers.set('Authorization',`Bearer ${process.env.BOLT_TOKEN}`);
         }
         return headers;
     }
