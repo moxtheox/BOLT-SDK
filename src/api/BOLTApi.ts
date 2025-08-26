@@ -19,33 +19,20 @@ enum BOLTApiLoadBoardShipmentStatus {
 export class BOLTApi {
     // Base URL for the BOLT API
     private static tenantUrl :string | null = null;
-    // Username for authentication
-    private static username :string | null = null; 
-    // Password for authentication
-    private static password :string | null = null; 
     // API version
     static readonly version = 'v1';
     /**
-     * 
-     * @param username Optional username for authentication. If not provided, it will use the environment variable BOLT_USERNAME.
-     * @param password Optional password for authentication. If not provided, it will use the environment variable BOLT_PASSWORD.
      * @throws {Error} If the required variables are not present.
      * @description
      * 
      */
-    constructor(username?: string, password?: string) {
-        if(!BOLTApi.username){
-            BOLTApi.username = username ?? process.env.BOLT_USER_NAME ?? ''
-        }
+    constructor() {
         if(!BOLTApi.tenantUrl) {
             BOLTApi.tenantUrl = process.env.BOLT_TENANT_URL ?? '';
         }
-        if(!BOLTApi.password) {
-            BOLTApi.password = password ?? process.env.BOLT_USER_PASSWORD ?? '';
-        }
         // Validate that the required variables are set
-        if (!BOLTApi.tenantUrl || !BOLTApi.username || !BOLTApi.password) {
-            throw new Error('Missing required variables: BOLT_TENANT_URL, BOLT_USER_NAME || username, BOLT_USER_PASSWORD || password');
+        if (!BOLTApi.tenantUrl || process.env.BOLT_TOKEN === undefined) {
+            throw new Error('Missing required variables: BOLT_TENANT_URL, BOLT_USER_NAME ');
         }
     }
     /**
@@ -65,32 +52,6 @@ export class BOLTApi {
     private validateIdNumber(id: number):boolean {
         return typeof id === 'number' && id > 0;
     }
-    /**
-     * Authenticate verifies that the BOLT Authorization cookie is set.
-     * If the cookie is not set, it attempts to authenticate using the provided username and password.
-     * @returns A promise that resolves to an eCookieResults enum value indicating the result of the authentication.
-     */
-    /* public async authenticate(): Promise<eCookieResults> {
-        if(!BOLTCookieManager.isValid()){
-            const body = {
-                username: BOLTApi.username,
-                password: BOLTApi.password,
-            };
-            const authAt = new Date();
-            const resp = await this.makeApiRequest<any>(BoltApiRoutes.login, body);
-            const setCookieHeader = resp.headers.get('set-cookie');
-            if (setCookieHeader) {
-                return BOLTCookieManager.setCookie(setCookieHeader, authAt);
-            }
-        } else {
-            const cookie = BOLTCookieManager.getCookie();
-            if (cookie) {
-                // If the cookie is already set, we can return success
-                return eCookieResults.SET;
-            }
-        }
-        return eCookieResults.FAILURE;
-    } */
     /**
      * Method to retrieve the currently authenticated user's data.
      * @returns A promise that resolves to the user data of the currently authenticated user.
@@ -345,7 +306,7 @@ export class BOLTApi {
      * @param includeAuth - Whether to include the authentication cookie in the headers.
      * If true, the authentication cookie will be included in the request headers.
      * @returns A headers object with standard headers for the BOLT API.
-     * The headers include 'Content-Type', 'Accept', and optionally 'Cookie' if includeAuth is true.
+     * The headers include 'Content-Type', 'Accept', and optionally 'Authorization' if includeAuth is true.
      */
     private makeStdHeaders(includeAuth:boolean = true): Headers {
         const headers = new Headers();
