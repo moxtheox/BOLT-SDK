@@ -70,7 +70,7 @@ export class BOLTApi {
      * If the cookie is not set, it attempts to authenticate using the provided username and password.
      * @returns A promise that resolves to an eCookieResults enum value indicating the result of the authentication.
      */
-    public async authenticate(): Promise<eCookieResults> {
+    /* public async authenticate(): Promise<eCookieResults> {
         if(!BOLTCookieManager.isValid()){
             const body = {
                 username: BOLTApi.username,
@@ -90,7 +90,7 @@ export class BOLTApi {
             }
         }
         return eCookieResults.FAILURE;
-    }
+    } */
     /**
      * Method to retrieve the currently authenticated user's data.
      * @returns A promise that resolves to the user data of the currently authenticated user.
@@ -373,4 +373,3 @@ export class BOLTApi {
 
     
 }
-
