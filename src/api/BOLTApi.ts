@@ -1,5 +1,4 @@
 import { BoltApiRoutes, type BoltApiRoute } from "./BoltAPIRoutes";
-import { BOLTCookieManager, eCookieResults } from "./BOLTCookieManager";
 
 
 interface ApiResponse<T> {
