@@ -1,6 +1,6 @@
 
 export interface Identifiable {
-    id:number
+    serial_id:number
 }
 
 export interface CoreAddress extends Identifiable {

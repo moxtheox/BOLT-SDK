@@ -9,7 +9,17 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION insert_stop_type(p_stop_type_name VARCHAR(50))
+-- Master Lookup Table for Stop Types
+-- This table contains the types of stops (e.g. Pickup, Delivery, Fuel, Rest).
+CREATE TABLE IF NOT EXISTS lu_stop_types (
+    serial_id SERIAL PRIMARY KEY,
+    stop_type_name VARCHAR(50) UNIQUE NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE OR REPLACE FUNCTION upsert_stop_type(p_stop_type_name VARCHAR(50))
 
 RETURNS INTEGER AS $$
 DECLARE
@@ -20,66 +30,13 @@ BEGIN
     END IF;
     INSERT INTO lu_stop_types (stop_type_name)
     VALUES (TRIM(p_stop_type_name))
+    ON CONFLICT (stop_type_name) DO UPDATE SET
+        stop_type_name = EXCLUDED.stop_type_name,
+        updated_at = NOW()
     RETURNING serial_id INTO v_stop_type_id;
     RETURN v_stop_type_id;
 END;
 $$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION insert_address_type(p_address_type_name VARCHAR(50))
-RETURNS INTEGER AS $$
-DECLARE
-    v_address_type_id INTEGER;
-BEGIN
-    IF NOT string_has_length(p_address_type_name) THEN
-        RAISE EXCEPTION 'Address type name cannot be null or empty';
-    END IF;
-    INSERT INTO lu_address_types (address_type_name)
-    VALUES (TRIM(p_address_type_name))
-    RETURNING serial_id INTO v_address_type_id;
-    RETURN v_address_type_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION insert_location_source(p_location_source_name VARCHAR(50))
-RETURNS INTEGER AS $$
-DECLARE
-    v_location_source_id INTEGER;
-BEGIN
-    IF NOT string_has_length(p_location_source_name) THEN
-        RAISE EXCEPTION 'Location source name cannot be null or empty';
-    END IF;
-    INSERT INTO lu_location_sources (location_source_name)
-    VALUES (TRIM(p_location_source_name))
-    RETURNING serial_id INTO v_location_source_id;
-    RETURN v_location_source_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION insert_contact_type(p_contact_type_name VARCHAR(50))
-RETURNS INTEGER AS $$
-DECLARE
-    v_contact_type_id INTEGER;
-BEGIN
-    IF NOT string_has_length(p_contact_type_name) THEN
-        RAISE EXCEPTION 'Contact type name cannot be null or empty';
-    END IF;
-    INSERT INTO lu_contact_types (contact_type_name)
-    VALUES (TRIM(p_contact_type_name))
-    RETURNING serial_id INTO v_contact_type_id;
-    RETURN v_contact_type_id;
-END;
-$$ LANGUAGE plpgsql;
-
-
--- Master Lookup Table for Stop Types
--- This table contains the types of stops (e.g. Pickup, Delivery, Fuel, Rest).
-CREATE TABLE IF NOT EXISTS lu_stop_types (
-    serial_id SERIAL PRIMARY KEY,
-    stop_type_name VARCHAR(50) UNIQUE NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
 
 -- Master Lookup Table for Address Types
 -- This table contains the types of addresses (e.g. Billing, Shipping, Terminal).
@@ -91,6 +48,25 @@ CREATE TABLE IF NOT EXISTS lu_address_types (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 )
 
+CREATE OR REPLACE FUNCTION upsert_address_type(p_address_type_name VARCHAR(50))
+RETURNS INTEGER AS $$
+DECLARE
+    v_address_type_id INTEGER;
+BEGIN
+    IF NOT string_has_length(p_address_type_name) THEN
+        RAISE EXCEPTION 'Address type name cannot be null or empty';
+    END IF;
+    INSERT INTO lu_address_types (address_type_name)
+    VALUES (TRIM(p_address_type_name))
+    ON CONFLICT (address_type_name) DO UPDATE SET
+        address_type_name = EXCLUDED.address_type_name,
+        updated_at = NOW()
+    RETURNING serial_id INTO v_address_type_id;
+    RETURN v_address_type_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Master Lookup Table for Location Sources
 -- This table contains the origin of the location data (e.g. GPS, manual entry).
 CREATE TABLE IF NOT EXISTS lu_location_sources (
@@ -101,11 +77,15 @@ CREATE TABLE IF NOT EXISTS lu_location_sources (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+
+
+
+
 -- Insert default location sources
 -- These records are used to represent the default and system location sources.
 INSERT INTO lu_location_sources (serial_id, location_source_name) VALUES (-1, 'unavailable')
 ON CONFLICT (serial_id) DO UPDATE SET
-    location_source = EXCLUDED.location_source_name,
+    location_source_name = EXCLUDED.location_source_name,
     updated_at = NOW();
 
 -- Insert system location source
@@ -123,6 +103,27 @@ INSERT INTO lu_location_sources (location_source_name) VALUES
 ON CONFLICT (location_source_name) DO UPDATE SET
     location_source_name = EXCLUDED.location_source_name,
     updated_at = NOW();
+
+
+
+CREATE OR REPLACE FUNCTION upsert_location_source(p_location_source_name VARCHAR(50))
+RETURNS INTEGER AS $$
+DECLARE
+    v_location_source_id INTEGER;
+BEGIN
+    IF NOT string_has_length(p_location_source_name) THEN
+        RAISE EXCEPTION 'Location source name cannot be null or empty';
+    END IF;
+    INSERT INTO lu_location_sources (location_source_name)
+    VALUES (TRIM(p_location_source_name))
+    ON CONFLICT (location_source_name) DO UPDATE SET
+        location_source_name = EXCLUDED.location_source_name,
+        updated_at = NOW()
+    RETURNING serial_id INTO v_location_source_id;
+    RETURN v_location_source_id;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- Master Lookup Table for Contact Types
 -- This table contains the types of contacts (e.g. Driver, Customer, Delivery Notification).
@@ -148,6 +149,25 @@ ON CONFLICT (serial_id) DO UPDATE SET
     updated_at = NOW();
 
 
+CREATE OR REPLACE FUNCTION upsert_contact_type(p_contact_type_name VARCHAR(50))
+RETURNS INTEGER AS $$
+DECLARE
+    v_contact_type_id INTEGER;
+BEGIN
+    IF NOT string_has_length(p_contact_type_name) THEN
+        RAISE EXCEPTION 'Contact type name cannot be null or empty';
+    END IF;
+    INSERT INTO lu_contact_types (contact_type_name)
+    VALUES (TRIM(p_contact_type_name))
+    ON CONFLICT (contact_type_name) DO UPDATE SET
+        contact_type_name = EXCLUDED.contact_type_name,
+        updated_at = NOW()
+    RETURNING serial_id INTO v_contact_type_id;
+    RETURN v_contact_type_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
 --Master Contacts Table
 CREATE TABLE IF NOT EXISTS contacts (
     serial_id SERIAL PRIMARY KEY,
@@ -161,6 +181,23 @@ CREATE TABLE IF NOT EXISTS contacts (
     CONSTRAINT chk_email_format CHECK (email ~* '^[a-zA-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$' OR email IS NULL),
     CONSTRAINT chk_phone_number_format CHECK (mobile_phone ~ '^[0-9]{10}$' OR mobile_phone IS NULL)
 );
+
+
+CREATE OR REPLACE FUNCTION insert_contact(
+    p_contact_type INTEGER,
+    p_email VARCHAR(255),
+    p_mobile_phone VARCHAR(10)
+) RETURNS INTEGER AS $$
+DECLARE
+    v_contact_id INTEGER;
+BEGIN
+    INSERT INTO contacts (contact_type, email, mobile_phone)
+    VALUES (p_contact_type, p_email, p_mobile_phone)
+    RETURNING serial_id INTO v_contact_id;
+    RETURN v_contact_id;
+END;
+$$ LANGUAGE plpgsql;
+
 
 -- Insert an unavailable contact record
 -- This record is used to represent a contact that is unavailable or unknown.
@@ -194,6 +231,25 @@ CREATE TABLE IF NOT EXISTS geo_locations (
 CREATE INDEX IF NOT EXISTS idx_geo_locations_location_source ON geo_locations (location_source) WHERE is_active = TRUE;
 -- Index to speed up queries that filter by currency: recorded_at.
 CREATE INDEX IF NOT EXISTS idx_geo_locations_recorded_at ON geo_locations (recorded_at DESC) WHERE is_active = TRUE;
+
+
+CREATE OR REPLACE FUNCTION insert_geo_location(
+    p_location_source INTEGER,
+    p_latitude DOUBLE PRECISION,
+    p_longitude DOUBLE PRECISION,
+    p_recorded_at TIMESTAMP WITH TIME ZONE
+) RETURNS BIGINT AS $$
+DECLARE
+    v_location_id BIGINT;
+BEGIN
+    INSERT INTO geo_locations (location_source, latitude, longitude, recorded_at)
+    VALUES (p_location_source, p_latitude, p_longitude, p_recorded_at)
+    RETURNING serial_id INTO v_location_id;
+    RETURN v_location_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
 
 -- Insert a default location record
 -- This record is used to represent a default or unknown location.
@@ -230,6 +286,31 @@ CREATE TABLE IF NOT EXISTS addresses (
 CREATE INDEX IF NOT EXISTS idx_addresses_serial_id ON addresses (serial_id DESC) WHERE is_active = TRUE; 
 
 
+CREATE OR REPLACE FUNCTION insert_address(
+    p_address_contact_ids INTEGER [],
+    p_street_1 VARCHAR(255),
+    p_street_2 VARCHAR(255),
+    p_city VARCHAR(100),
+    p_state VARCHAR(50),
+    p_postal_code VARCHAR(20),
+    p_country VARCHAR(100),
+    p_address_type INTEGER,
+    p_location_id BIGINT
+) RETURNS INTEGER AS $$
+DECLARE
+    v_address_id INTEGER;
+BEGIN
+    INSERT INTO addresses (
+        address_contact_ids, street_1, street_2, city, state, postal_code, country, address_type, location_id
+    ) VALUES (
+        p_address_contact_ids, p_street_1, p_street_2, p_city, p_state, p_postal_code, p_country, p_address_type, p_location_id
+    )
+    RETURNING serial_id INTO v_address_id;
+    RETURN v_address_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Master Authorities Table
 CREATE TABLE IF NOT EXISTS authorities (
     serial_id SERIAL PRIMARY KEY,
@@ -241,6 +322,21 @@ CREATE TABLE IF NOT EXISTS authorities (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+CREATE OR REPLACE FUNCTION insert_authority(
+    p_authority_name VARCHAR(255),
+    p_dot_number VARCHAR(20),
+    p_address_id INTEGER
+) RETURNS INTEGER AS $$
+DECLARE
+    v_authority_id INTEGER;
+BEGIN
+    INSERT INTO authorities (authority_name, dot_number, address_id)
+    VALUES (p_authority_name, p_dot_number, p_address_id)
+    RETURNING serial_id INTO v_authority_id;
+    RETURN v_authority_id;
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- Master Divisions Table
@@ -257,6 +353,21 @@ CREATE TABLE IF NOT EXISTS divisions (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE OR REPLACE FUNCTION insert_division(
+    p_division_name VARCHAR(255),
+    p_bolt_terminal_id INTEGER,
+    p_authority_id INTEGER,
+    p_address_id INTEGER
+) RETURNS INTEGER AS $$
+DECLARE
+    v_division_id INTEGER;
+BEGIN
+    INSERT INTO divisions (division_name, bolt_terminal_id, authority_id, address_id)
+    VALUES (p_division_name, p_bolt_terminal_id, p_authority_id, p_address_id)
+    RETURNING serial_id INTO v_division_id;
+    RETURN v_division_id;
+END;
+$$ LANGUAGE plpgsql;
 
 -- Insert an unavailable division record
 -- This record is used to represent a division that is not currently known or available.
@@ -282,6 +393,23 @@ INSERT INTO terminals (serial_id, tms_id, terminal_name, division_id, address_id
 VALUES (-1, 'unavailable', 'unavailable', -1, -1);
 
 
+CREATE OR REPLACE FUNCTION insert_terminal(
+    p_tms_id VARCHAR(255),
+    p_terminal_name VARCHAR(255),
+    p_division_id INTEGER,
+    p_address_id INTEGER
+) RETURNS INTEGER AS $$
+DECLARE
+    v_terminal_id INTEGER;
+BEGIN
+    INSERT INTO terminals (tms_id, terminal_name, division_id, address_id)
+    VALUES (p_tms_id, p_terminal_name, p_division_id, p_address_id)
+    RETURNING serial_id INTO v_terminal_id;
+    RETURN v_terminal_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- MASTER Trailer Table
 CREATE TABLE IF NOT EXISTS trailers (
     serial_id SERIAL PRIMARY KEY,
@@ -294,6 +422,22 @@ CREATE TABLE IF NOT EXISTS trailers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 )
+
+
+CREATE OR REPLACE FUNCTION insert_trailer(
+    p_tms_id VARCHAR(255),
+    p_terminal_id INTEGER,
+    p_division_id INTEGER
+) RETURNS INTEGER AS $$
+DECLARE
+    v_trailer_id INTEGER;
+BEGIN
+    INSERT INTO trailers (tms_id, terminal_id, division_id)
+    VALUES (p_tms_id, p_terminal_id, p_division_id)
+    RETURNING serial_id INTO v_trailer_id;
+    RETURN v_trailer_id;
+END;
+$$ LANGUAGE plpgsql;
 
 
 -- Master Truck Table
@@ -361,6 +505,33 @@ INSERT INTO trucks (
         updated_at = NOW();
 
 
+CREATE OR REPLACE FUNCTION insert_truck(
+    p_tms_id VARCHAR(255),
+    p_telematic_id VARCHAR(255),
+    p_truck_name VARCHAR(255),
+    p_division_id INTEGER,
+    p_terminal_id INTEGER,
+    p_current_driver_id INTEGER,
+    p_trailer_1_id INTEGER,
+    p_trailer_2_id INTEGER,
+    p_current_location_id BIGINT,
+    p_vin VARCHAR(17),
+    p_license_plate VARCHAR(15),
+    p_license_plate_state VARCHAR(3)
+) RETURNS INTEGER AS $$
+DECLARE
+    v_truck_id INTEGER;
+BEGIN
+    INSERT INTO trucks (
+        tms_id, telematic_id, truck_name, division_id, terminal_id, current_driver_id, trailer_1_id, trailer_2_id, current_location_id, vin, license_plate, license_plate_state
+    ) VALUES (
+        p_tms_id, p_telematic_id, p_truck_name, p_division_id, p_terminal_id, p_current_driver_id, p_trailer_1_id, p_trailer_2_id, p_current_location_id, p_vin, p_license_plate, p_license_plate_state
+    )
+    RETURNING serial_id INTO v_truck_id;
+    RETURN v_truck_id;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Master Driver Table
 CREATE TABLE IF NOT EXISTS drivers (
     serial_id SERIAL PRIMARY KEY,
@@ -382,7 +553,6 @@ CREATE TABLE IF NOT EXISTS drivers (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
 
 
 -- Insert an unknown driver record
@@ -417,6 +587,32 @@ ON CONFLICT (serial_id) DO UPDATE SET
     updated_at = NOW();
 
 
+
+CREATE OR REPLACE FUNCTION insert_driver(
+    p_first_name VARCHAR(50),
+    p_last_name VARCHAR(100),
+    p_license_number VARCHAR(40),
+    p_license_state VARCHAR(25),
+    p_division_id INTEGER,
+    p_terminal_id INTEGER,
+    p_tms_id VARCHAR(255),
+    p_telematic_id VARCHAR(255),
+    p_current_truck_serial_id INTEGER,
+    p_contact_id INTEGER
+) RETURNS INTEGER AS $$
+DECLARE
+    v_driver_id INTEGER;
+BEGIN
+    INSERT INTO drivers (
+        first_name, last_name, license_number, license_state, division_id, terminal_id, tms_id, telematic_id, current_truck_serial_id, contact_id
+    ) VALUES (
+        p_first_name, p_last_name, p_license_number, p_license_state, p_division_id, p_terminal_id, p_tms_id, p_telematic_id, p_current_truck_serial_id, p_contact_id
+    )
+    RETURNING serial_id INTO v_driver_id;
+    RETURN v_driver_id;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Master Stops Table
 
 CREATE TABLE IF NOT EXISTS stops (
@@ -450,6 +646,34 @@ CREATE INDEX IF NOT EXISTS idx_stops_stop_truck_id ON stops (stop_truck_id);
 CREATE INDEX IF NOT EXISTS idx_stops_pos_gin ON stops USING GIN (stop_purchase_orders);  -- GIN index for array column
 CREATE INDEX IF NOT EXISTS idx_stops_pro_seq ON stops (tms_pro_number, stop_sequence);
 
+CREATE OR REPLACE FUNCTION insert_stop(
+    p_address_id INTEGER,
+    p_stop_type_id INTEGER,
+    p_stop_purchase_orders VARCHAR(255) [],
+    p_stop_sequence INTEGER,
+    p_tms_pro_number VARCHAR(255),
+    p_stop_driver_id INTEGER,
+    p_stop_truck_id INTEGER,
+    p_sched_arrival TIMESTAMP WITH TIME ZONE,
+    p_actl_arrive TIMESTAMP WITH TIME ZONE,
+    p_sched_dept TIMESTAMP WITH TIME ZONE,
+    p_actl_dept TIMESTAMP WITH TIME ZONE,
+    p_is_completed BOOLEAN
+) RETURNS BIGINT AS $$
+DECLARE
+    v_stop_id BIGINT;
+BEGIN
+    INSERT INTO stops (
+        address_id, stop_type_id, stop_purchase_orders, stop_sequence, tms_pro_number, stop_driver_id, stop_truck_id, sched_arrival, actl_arrive, sched_dept, actl_dept, is_completed
+    ) VALUES (
+        p_address_id, p_stop_type_id, p_stop_purchase_orders, p_stop_sequence, p_tms_pro_number, p_stop_driver_id, p_stop_truck_id, p_sched_arrival, p_actl_arrive, p_sched_dept, p_actl_dept, p_is_completed
+    )
+    RETURNING serial_id INTO v_stop_id;
+    RETURN v_stop_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
 -- Master Loads Table
 CREATE TABLE IF NOT EXISTS loads (
     serial_id SERIAL PRIMARY KEY,
@@ -473,3 +697,30 @@ CREATE INDEX IF NOT EXISTS idx_loads_terminal_id ON loads (terminal_id) WHERE is
 CREATE INDEX IF NOT EXISTS idx_loads_division_id ON loads (division_id) WHERE is_active = TRUE;
 CREATE INDEX IF NOT EXISTS idx_loads_assigned_driver_ids_gin ON loads USING GIN (assigned_driver_ids); -- GIN index for array column
 CREATE INDEX IF NOT EXISTS idx_loads_assigned_truck_ids_gin ON loads USING GIN (assigned_truck_ids); -- GIN index for array column
+
+CREATE OR REPLACE FUNCTION insert_load(
+    p_load_purchase_orders VARCHAR(255) [],
+    p_load_stop_ids BIGINT [],
+    p_tms_pro_number VARCHAR(255),
+    p_assigned_driver_ids INTEGER [],
+    p_assigned_truck_ids INTEGER [],
+    p_trailer_ids INTEGER [],
+    p_terminal_id INTEGER,
+    p_division_id INTEGER
+) RETURNS INTEGER AS $$
+DECLARE
+    v_load_id INTEGER;
+BEGIN
+    INSERT INTO loads (
+        load_purchase_orders, load_stop_ids, tms_pro_number, assigned_driver_ids, assigned_truck_ids, trailer_ids, terminal_id, division_id
+    ) VALUES (
+        p_load_purchase_orders, p_load_stop_ids, p_tms_pro_number, p_assigned_driver_ids, p_assigned_truck_ids, p_trailer_ids, p_terminal_id, p_division_id
+    )
+    RETURNING serial_id INTO v_load_id;
+    RETURN v_load_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
