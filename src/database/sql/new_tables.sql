@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS lu_address_types (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-)
+);
 
 CREATE OR REPLACE FUNCTION upsert_address_type(p_address_type_name VARCHAR(50))
 RETURNS INTEGER AS $$
@@ -92,7 +92,7 @@ ON CONFLICT (serial_id) DO UPDATE SET
 -- This record helps enforce the system as 0 default in later queries.
 INSERT INTO lu_location_sources (serial_id, location_source_name) VALUES (0, 'System')
 ON CONFLICT (serial_id) DO UPDATE SET
-    location_source = EXCLUDED.location_source_name,
+    location_source_name = EXCLUDED.location_source_name,
     updated_at = NOW();
 
 -- Insert current location sources for initial setup
@@ -343,7 +343,7 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS divisions (
     serial_id SERIAL PRIMARY KEY,
     division_name VARCHAR(255) NOT NULL,
-    bolt_terminal_id INTEGER NOT NULL,
+    tms_terminal_id INTEGER NOT NULL,
     authority_id INTEGER NOT NULL,
     FOREIGN KEY (authority_id) REFERENCES authorities(serial_id),
     address_id INTEGER NOT NULL,
@@ -355,15 +355,15 @@ CREATE TABLE IF NOT EXISTS divisions (
 
 CREATE OR REPLACE FUNCTION insert_division(
     p_division_name VARCHAR(255),
-    p_bolt_terminal_id INTEGER,
+    p_tms_terminal_id INTEGER,
     p_authority_id INTEGER,
     p_address_id INTEGER
 ) RETURNS INTEGER AS $$
 DECLARE
     v_division_id INTEGER;
 BEGIN
-    INSERT INTO divisions (division_name, bolt_terminal_id, authority_id, address_id)
-    VALUES (p_division_name, p_bolt_terminal_id, p_authority_id, p_address_id)
+    INSERT INTO divisions (division_name, tms_terminal_id, authority_id, address_id)
+    VALUES (p_division_name, p_tms_terminal_id, p_authority_id, p_address_id)
     RETURNING serial_id INTO v_division_id;
     RETURN v_division_id;
 END;
@@ -371,7 +371,7 @@ $$ LANGUAGE plpgsql;
 
 -- Insert an unavailable division record
 -- This record is used to represent a division that is not currently known or available.
-INSERT INTO divisions (serial_id, division_name, bolt_terminal_id, authority_id, address_id)
+INSERT INTO divisions (serial_id, division_name, tms_terminal_id, authority_id, address_id)
 VALUES (-1, 'unavailable', -1, -1, -1)
 ON CONFLICT (serial_id) DO NOTHING;
 
@@ -414,6 +414,7 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS trailers (
     serial_id SERIAL PRIMARY KEY,
     tms_id VARCHAR(255) NOT NULL,
+    trailer_name VARCHAR(20) NOT NULL,
     terminal_id INTEGER NOT NULL DEFAULT 0, -- 0 indicates no terminal
     FOREIGN KEY (terminal_id) REFERENCES terminals(serial_id),
     division_id INTEGER NOT NULL DEFAULT 0, -- 0 indicates no division
@@ -421,19 +422,20 @@ CREATE TABLE IF NOT EXISTS trailers (
     is_active BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-)
+);
 
 
 CREATE OR REPLACE FUNCTION insert_trailer(
     p_tms_id VARCHAR(255),
+    p_trailer_name VARCHAR(20),
     p_terminal_id INTEGER,
     p_division_id INTEGER
 ) RETURNS INTEGER AS $$
 DECLARE
     v_trailer_id INTEGER;
 BEGIN
-    INSERT INTO trailers (tms_id, terminal_id, division_id)
-    VALUES (p_tms_id, p_terminal_id, p_division_id)
+    INSERT INTO trailers (tms_id, trailer_name, terminal_id, division_id)
+    VALUES (p_tms_id, p_trailer_name, p_terminal_id, p_division_id)
     RETURNING serial_id INTO v_trailer_id;
     RETURN v_trailer_id;
 END;
@@ -463,7 +465,7 @@ CREATE Table IF NOT EXISTS trucks (
     license_plate_state VARCHAR(3),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-)
+);
 
 
 -- Inserts default truck records for unknown and no truck
