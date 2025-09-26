@@ -10,7 +10,7 @@ services:
       PGPORT: ${DATABASE_PORT}
     volumes:
       - ./src/database/sql:/docker-entrypoint-initdb.d
-      - bolt-data:/var/lib/postgresql/data
+      #- bolt-data:/var/lib/postgresql/data
     ports:
       - 5432:${DATABASE_PORT}
     networks:
@@ -24,7 +24,7 @@ services:
     environment:
       DATABASE_URL: postgres://${DATABASE_USER}:${DATABASE_PASSWORD}@bolt-data-db:${DATABASE_PORT}/${DATABASE_NAME}
       BOLT_USER_NAME: ${BOLT_USER_NAME}
-      BOLT_USER_PASSWORD: ${BOLT_USER_PASSWORD}
+      BOLT_TOKEN: ${BOLT_TOKEN}
       BOLT_TENANT_URL: ${BOLT_TENANT_URL}
     ports:
       - "3000:3000"
@@ -32,8 +32,8 @@ services:
       - bolt-data-db
     networks:
       - bolt-data-network
-volumes:
-  bolt-data:
+#volumes:
+  #bolt-data:
 
 networks:
   bolt-data-network:

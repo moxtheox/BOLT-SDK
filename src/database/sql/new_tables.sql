@@ -66,6 +66,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+INSERT INTO lu_address_types (serial_id, address_type_name) VALUES (-1, 'unavailable') ON CONFLICT (serial_id) DO UPDATE SET
+    address_type_name = EXCLUDED.address_type_name,
+    updated_at = NOW();
 
 -- Master Lookup Table for Location Sources
 -- This table contains the origin of the location data (e.g. GPS, manual entry).
@@ -202,7 +205,7 @@ $$ LANGUAGE plpgsql;
 -- Insert an unavailable contact record
 -- This record is used to represent a contact that is unavailable or unknown.
 INSERT INTO contacts (serial_id, contact_type, email, mobile_phone)
-VALUES (-1, -1, 'unavailable', '0000000000')
+VALUES (-1, -1, 'unavailable@undefined.net', '0000000000')
 ON CONFLICT (serial_id) DO UPDATE SET
     contact_type = EXCLUDED.contact_type,
     email = EXCLUDED.email,
@@ -285,6 +288,17 @@ CREATE TABLE IF NOT EXISTS addresses (
 -- This index is useful for queries that retrieve only active addresses.
 CREATE INDEX IF NOT EXISTS idx_addresses_serial_id ON addresses (serial_id DESC) WHERE is_active = TRUE; 
 
+INSERT INTO addresses (serial_id, street_1, city, state, postal_code, country, address_type, location_id)
+VALUES (-1, 'unavailable', 'unavailable', 'unavailable', 'unavailable', 'unavailable', -1, -1)
+ON CONFLICT (serial_id) DO UPDATE SET
+    street_1 = EXCLUDED.street_1,
+    city = EXCLUDED.city,
+    state = EXCLUDED.state,
+    postal_code = EXCLUDED.postal_code,
+    country = EXCLUDED.country,
+    address_type = EXCLUDED.address_type,
+    location_id = EXCLUDED.location_id,
+    updated_at = NOW();
 
 CREATE OR REPLACE FUNCTION insert_address(
     p_address_contact_ids INTEGER [],
@@ -323,6 +337,10 @@ CREATE TABLE IF NOT EXISTS authorities (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+INSERT INTO authorities (serial_id, authority_name, dot_number, address_id)
+VALUES (-1, 'unavailable', 'unavailable', -1),
+       (0 , 'No Authority', 'No Authority', -1);
+
 CREATE OR REPLACE FUNCTION insert_authority(
     p_authority_name VARCHAR(255),
     p_dot_number VARCHAR(20),
@@ -338,6 +356,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+INSERT INTO authorities (serial_id, authority_name, dot_number, address_id)
+VALUES (-1, 'unavailable', 'unavailable', -1) ON CONFLICT (serial_id) DO UPDATE SET
+    authority_name = EXCLUDED.authority_name,
+    dot_number = EXCLUDED.dot_number,
+    address_id = EXCLUDED.address_id,
+    updated_at = NOW();
 
 -- Master Divisions Table
 CREATE TABLE IF NOT EXISTS divisions (
@@ -352,6 +376,10 @@ CREATE TABLE IF NOT EXISTS divisions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+INSERT INTO divisions (serial_id, division_name, tms_terminal_id, authority_id, address_id)
+VALUES (-1, 'unavailable', -1, -1, -1),
+       (0, 'No Division', 0, 0, -1);
 
 CREATE OR REPLACE FUNCTION insert_division(
     p_division_name VARCHAR(255),
@@ -390,7 +418,8 @@ CREATE TABLE IF NOT EXISTS terminals (
 );
 
 INSERT INTO terminals (serial_id, tms_id, terminal_name, division_id, address_id)
-VALUES (-1, 'unavailable', 'unavailable', -1, -1);
+VALUES (-1, 'unavailable', 'unavailable', -1, -1),
+       (0, 'No Terminal', 'No Terminal', 0, -1);
 
 
 CREATE OR REPLACE FUNCTION insert_terminal(
@@ -424,6 +453,9 @@ CREATE TABLE IF NOT EXISTS trailers (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+INSERT INTO trailers( serial_id, tms_id, trailer_name, terminal_id, division_id)
+VALUES (-1, 'unavailable', 'unavailable', 0, 0),
+         (0, 'No Trailer', 'No Trailer', 0, 0);
 
 CREATE OR REPLACE FUNCTION insert_trailer(
     p_tms_id VARCHAR(255),
@@ -487,10 +519,10 @@ INSERT INTO trucks (
     license_plate_state
     )
     VALUES ( 
-        -1, 'unavailable', NULL, 'unavailable',-1, -1, -1, -1, -1, -1, 'unavailable', 'unavailable', 'unavailable'
+        -1, 'unavailable', NULL, 'unavailable',-1, -1, -1, -1, -1, -1, 'unavailable', 'unavailable', 'UNV'
     ),
     (
-        0, 'No truck', NULL, 'No truck', -1, -1, 0, -1, 0, 0, 'No Truck', 'No Truck', 'No Truck'
+        0, 'No truck', NULL, 'No truck', -1, -1, 0, -1, 0, 0, 'No Truck', 'No Truck', 'N/A'
     )
     ON CONFLICT (serial_id) DO UPDATE SET
         tms_id = EXCLUDED.tms_id,

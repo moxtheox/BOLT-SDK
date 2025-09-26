@@ -1,4 +1,4 @@
-import type { iCoreAddress, iCoreIdentifiable, CoreContact } from "../DBcore/coreDbInterfaces";
+import type { iCoreAddress, iCoreIdentifiable, } from "../DBcore/coreDbInterfaces";
 
 export interface BOLTdbEntity {}
 
@@ -7,6 +7,11 @@ export interface BOLTCoreIdentifiable extends BOLTdbEntity, iCoreIdentifiable {}
 export interface BOLTCoreGeoLocation extends BOLTdbEntity{
     longitude:number,
     latitude:number
+}
+
+export interface BOLTCoreContact {
+    email?:string,
+    phone?:string
 }
 
 export interface BOLTCoreTerminalIdentifiable extends BOLTdbEntity {
@@ -219,7 +224,7 @@ BOLTCoreActive {
 export interface BOLTCoreLocation extends BOLTCoreAddress, 
 BOLTCoreRelationalAddress, 
 BOLTCoreCodeable,
-CoreContact,
+BOLTCoreContact,
 BOLTCoreCommentable,
 BOLTCoreActive,
 BOLTCoreLocalDirections,
