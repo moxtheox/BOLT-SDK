@@ -483,7 +483,7 @@ CREATE Table IF NOT EXISTS trucks (
     truck_name VARCHAR(255) NOT NULL,
     division_id INTEGER NOT NULL,
     FOREIGN KEY (division_id) REFERENCES divisions(serial_id),
-    terminal_id INTEGER NOT NULL DEFAULT -1, -- -1 indicates no terminal
+    terminal_id INTEGER NOT NULL DEFAULT -1, -- -1 indicates unavailable terminal
     FOREIGN KEY (terminal_id) REFERENCES terminals(serial_id),
     current_driver_id INTEGER,
     trailer_1_id INTEGER,
