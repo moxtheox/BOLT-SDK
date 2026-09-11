@@ -1,9 +1,11 @@
+import type { iBOLTLoadBoardEntry } from "./interfaces/BOLTInterfaces";
+import type { iLoadSegment } from "./interfaces/boltLoadSegment"
 import { BoltApiRoutes, type BoltApiRoute } from "./BoltAPIRoutes";
 
 
-interface ApiResponse<T> {
+export interface BOLTApiResponse<T> {
   message: string;
-  data: T;
+  data: T[];
   type: string;
 }
 
@@ -56,9 +58,9 @@ export class BOLTApi {
      * Method to retrieve the currently authenticated user's data.
      * @returns A promise that resolves to the user data of the currently authenticated user.
      */
-    public async getMe(): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.me);
-        return await r.json() as ApiResponse<any>;
+    public async getMe(): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.me);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Fetches loads by ID from the BOLT API.
@@ -66,12 +68,12 @@ export class BOLTApi {
      * It must be a positive number.
      * @returns A promise that resolves to the load data.
      */
-    public async getLoadsById(loadId: number): Promise<ApiResponse<any>> {
+    public async getLoadsById(loadId: number): Promise<BOLTApiResponse<any>> {
         if(!this.validateIdNumber(loadId)) {
             throw new Error('Invalid loadId. It must be a positive number.');
         }
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.loadsById, undefined, loadId);
-        return await r.json() as ApiResponse<any>;
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.loadsById, undefined, loadId);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * @unsupported - Currently not implemented in the BOLT API. A call will return an 
@@ -80,12 +82,12 @@ export class BOLTApi {
      * It must be a positive number.
      * @returns 
      */
-    public async getLoadBreadcrumbs(loadId: number): Promise<ApiResponse<any>> {
+    public async getLoadBreadcrumbs(loadId: number): Promise<BOLTApiResponse<any>> {
         if(!this.validateIdNumber(loadId)) {
             throw new Error('Invalid loadId. It must be a positive number.'+`  ${loadId} was provided.`);
         }
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.gpsBreadcrumbsByLoadId, undefined, loadId);
-        return await r.json() as ApiResponse<any>;
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.gpsBreadcrumbsByLoadId, undefined, loadId);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves all load board shipments from the BOLT API.
@@ -94,9 +96,9 @@ export class BOLTApi {
      * @returns 
      */
     public async getLoadBoardShipments(
-        status: BOLTApiLoadBoardShipmentStatus = BOLTApiLoadBoardShipmentStatus.ALL): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.loadBoardShipments, undefined, status);
-        return await r.json() as ApiResponse<any>;
+        status: BOLTApiLoadBoardShipmentStatus = BOLTApiLoadBoardShipmentStatus.ALL): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.loadBoardShipments, undefined, status);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves the load board shipments from the BOLT API.
@@ -105,9 +107,9 @@ export class BOLTApi {
      * @returns API response containing the load board shipments.
      */
     public async GetLoadBoard(
-        status: BOLTApiLoadBoardShipmentStatus = BOLTApiLoadBoardShipmentStatus.ALL): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any[]>(BoltApiRoutes.loadBoardShipments, undefined, status);
-        return await r.json() as ApiResponse<any[]>;
+        status: BOLTApiLoadBoardShipmentStatus = BOLTApiLoadBoardShipmentStatus.ALL): Promise<BOLTApiResponse<iBOLTLoadBoardEntry>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.loadBoardShipments, undefined, status);
+        return await r.json() as BOLTApiResponse<iBOLTLoadBoardEntry>;
     }
     /**
      * Retrieves user data by user ID from the BOLT API.
@@ -116,10 +118,10 @@ export class BOLTApi {
      * @returns User data for the specified user ID.
      * @throws {Error} If the userId is not a positive number.
      */
-    public async getUsersById(userId: number): Promise<ApiResponse<any>> {
+    public async getUsersById(userId: number): Promise<BOLTApiResponse<any>> {
         if(this.validateIdNumber(userId)) {
             const r = await this.makeApiRequest<any>(BoltApiRoutes.usersById, undefined, userId);
-            return await r.json() as ApiResponse<any>;
+            return await r.json() as BOLTApiResponse<any>;
         }
         throw new Error('Invalid userId. It must be a positive number.');
     }
@@ -127,9 +129,9 @@ export class BOLTApi {
      * Retrieves load segments from the BOLT API.
      * @returns A promise that resolves to the load segments data.
      */
-    public async getLoadSegments(): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.loadSegments);
-        return await r.json() as ApiResponse<any>;
+    public async getLoadSegments(): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.loadSegments);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves shipments associated with a specific load ID from the BOLT API.
@@ -138,20 +140,20 @@ export class BOLTApi {
      * @returns Shipments associated with the specified load ID.
      * @throws {Error} If the loadId is not a positive number.
      */
-    public async getShipmentsByLoadId(loadId: number): Promise<ApiResponse<any>> {
+    public async getShipmentsByLoadId(loadId: number): Promise<BOLTApiResponse<any>> {
         if(!this.validateIdNumber(loadId)) {
             throw new Error('Invalid loadId. It must be a positive number.');
         }
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.shipmentsByLoadId, undefined, loadId);
-        return await r.json() as ApiResponse<any>;
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.shipmentsByLoadId, undefined, loadId);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves the shipTo data from the BOLT API.
      * @returns A promise that resolves to the shipTo data from the BOLT API.
      */
-    public async getShipTo(): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.shipTo);
-        return await r.json() as ApiResponse<any>;
+    public async getShipTo(): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.shipTo);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves specific shipTo data by shipToId from the BOLT API.
@@ -160,28 +162,28 @@ export class BOLTApi {
      * @returns Specific shipTo data for the given shipToId.
      * @throws {Error} If the shipToId is not a positive number.
      */
-    public async getShipToById(shipToId: number): Promise<ApiResponse<any>> {
+    public async getShipToById(shipToId: number): Promise<BOLTApiResponse<any>> {
         if(!this.validateIdNumber(shipToId)) {
             throw new Error('Invalid shipToId. It must be a positive number.');
         }
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.shipToById, undefined, shipToId);
-        return await r.json() as ApiResponse<any>;
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.shipToById, undefined, shipToId);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves the billTo locations data from the BOLT API.
      * @returns A promise that resolves to the billTo locations data from the BOLT API.
      */
-    public async getBillToLocations(): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.billToLocations);
-        return await r.json() as ApiResponse<any>;
+    public async getBillToLocations(): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.billToLocations);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves all Equipment, such as dollies, from the BOLT API.
      * @returns A promise that resolves to the billTo location data for the specified ID.
      */
-    public async getEquipment(): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.equipment);
-        return await r.json() as ApiResponse<any>;
+    public async getEquipment(): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.equipment);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves all segments for a specific load from the BOLT API.
@@ -190,20 +192,20 @@ export class BOLTApi {
      * @returns Load segments for the specified load ID.
      * @throws {Error} If the loadId is not a positive number.
      */
-    public async getLoadSegmentsById(loadId: number): Promise<ApiResponse<any>> {
+    public async getLoadSegmentsById(loadId: number): Promise<BOLTApiResponse<iLoadSegment>> {
         if(!this.validateIdNumber(loadId)) {
             throw new Error('Invalid loadId. It must be a positive number.');
         }
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.segments, undefined, loadId);
-        return await r.json() as ApiResponse<any>;
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.segments, undefined, loadId);
+        return await r.json() as BOLTApiResponse<iLoadSegment>;
     }
     /**
      * Retrieves all trailers from the BOLT API.
      * @returns A promise that resolves to the trailers data from the BOLT API.
      */
-    public async getTrailers(): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.trailers);
-        return await r.json() as ApiResponse<any>;
+    public async getTrailers(): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.trailers);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves a specific trailer by ID from the BOLT API.
@@ -212,20 +214,20 @@ export class BOLTApi {
      * @returns Trailer data for the specified trailer ID.
      * @throws {Error} If the trailerId is not a positive number.
      */
-    public async getTrailersById(trailerId:number): Promise<ApiResponse<any>> {
+    public async getTrailersById(trailerId:number): Promise<BOLTApiResponse<any>> {
         if(!this.validateIdNumber(trailerId)) {
             throw new Error('Invalid trailerId. It must be a positive number.');
         }
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.trailers, undefined, trailerId);
-        return await r.json() as ApiResponse<any>;
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.trailers, undefined, trailerId);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves all trucks from the BOLT API.
      * @returns A promise that resolves to the trucks data from the BOLT API.
      */
-    public async getTrucks(): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.trucks);
-        return await r.json() as ApiResponse<any>;
+    public async getTrucks(): Promise<BOLTApiResponse<any>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.trucks);
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves a specific truck by ID from the BOLT API.
@@ -233,20 +235,20 @@ export class BOLTApi {
      * It must be a positive number.
      * @returns Truck data for the specified truck ID.
      */
-    public async getTrucksById(truckId:number): Promise<ApiResponse<any>> {
+    public async getTrucksById(truckId:number): Promise<BOLTApiResponse<any>> {
         if(!this.validateIdNumber(truckId)) {
             throw new Error('Invalid truckId. It must be a positive number.');
         }
         const r = await this.makeApiRequest<any>(BoltApiRoutes.trucksById, undefined, truckId);
-        return await r.json() as ApiResponse<any>;
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * Retrieves all users from the BOLT API.
      * @returns A promise that resolves to the users data from the BOLT API.
      */
-    public async getUsers(): Promise<ApiResponse<any>> {
+    public async getUsers(): Promise<BOLTApiResponse<any>> {
         const r = await this.makeApiRequest<any>(BoltApiRoutes.users);
-        return await r.json() as ApiResponse<any>;
+        return await r.json() as BOLTApiResponse<any>;
     }
     /**
      * @private
@@ -259,7 +261,7 @@ export class BOLTApi {
      * @returns Promise<Response> - The response from the API call.
      * @throws {Error} If the parameter count does not match the expected count for the route.
      */
-    private async makeApiRequest<T>(bar: BoltApiRoute, body?: any, ...args: any):Promise<Response> {
+    private async makeApiRequest<T>(bar: BoltApiRoute, body?: T, ...args: any):Promise<Response> {
         const includeAuth = bar.path !== BoltApiRoutes.login.path;
         const queryString = this.makeQueryString(bar, ...args);
         const url = `${this.getApiRootPath()}${bar.path}${queryString}`;
