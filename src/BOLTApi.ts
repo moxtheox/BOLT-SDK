@@ -1,6 +1,7 @@
-import type { iBOLTLoadBoardEntry } from "./interfaces/BOLTInterfaces";
+import type { iBOLTLoadBoardEntry, iLocation } from "./interfaces/BOLTInterfaces";
 import type { iLoadSegment } from "./interfaces/boltLoadSegment"
 import { BoltApiRoutes, type BoltApiRoute } from "./BoltAPIRoutes";
+import type { iEquipment, iUserMe, iUserStandard } from "./interfaces/BOLTUserInfo";
 
 
 export interface BOLTApiResponse<T> {
@@ -58,9 +59,9 @@ export class BOLTApi {
      * Method to retrieve the currently authenticated user's data.
      * @returns A promise that resolves to the user data of the currently authenticated user.
      */
-    public async getMe(): Promise<BOLTApiResponse<any>> {
+    public async getMe(): Promise<BOLTApiResponse<iUserMe>> {
         const r = await this.makeApiRequest<undefined>(BoltApiRoutes.me);
-        return await r.json() as BOLTApiResponse<any>;
+        return await r.json() as BOLTApiResponse<iUserMe>;
     }
     /**
      * Fetches loads by ID from the BOLT API.
@@ -118,10 +119,10 @@ export class BOLTApi {
      * @returns User data for the specified user ID.
      * @throws {Error} If the userId is not a positive number.
      */
-    public async getUsersById(userId: number): Promise<BOLTApiResponse<any>> {
+    public async getUsersById(userId: number): Promise<BOLTApiResponse<iUserStandard>> {
         if(this.validateIdNumber(userId)) {
-            const r = await this.makeApiRequest<any>(BoltApiRoutes.usersById, undefined, userId);
-            return await r.json() as BOLTApiResponse<any>;
+            const r = await this.makeApiRequest<undefined>(BoltApiRoutes.usersById, undefined, userId);
+            return await r.json() as BOLTApiResponse<iUserStandard>;
         }
         throw new Error('Invalid userId. It must be a positive number.');
     }
@@ -151,9 +152,9 @@ export class BOLTApi {
      * Retrieves the shipTo data from the BOLT API.
      * @returns A promise that resolves to the shipTo data from the BOLT API.
      */
-    public async getShipTo(): Promise<BOLTApiResponse<any>> {
+    public async getShipTo(): Promise<BOLTApiResponse<iLocation>> {
         const r = await this.makeApiRequest<undefined>(BoltApiRoutes.shipTo);
-        return await r.json() as BOLTApiResponse<any>;
+        return await r.json() as BOLTApiResponse<iLocation>;
     }
     /**
      * Retrieves specific shipTo data by shipToId from the BOLT API.
@@ -162,28 +163,28 @@ export class BOLTApi {
      * @returns Specific shipTo data for the given shipToId.
      * @throws {Error} If the shipToId is not a positive number.
      */
-    public async getShipToById(shipToId: number): Promise<BOLTApiResponse<any>> {
+    public async getShipToById(shipToId: number): Promise<BOLTApiResponse<iLocation>> {
         if(!this.validateIdNumber(shipToId)) {
             throw new Error('Invalid shipToId. It must be a positive number.');
         }
         const r = await this.makeApiRequest<undefined>(BoltApiRoutes.shipToById, undefined, shipToId);
-        return await r.json() as BOLTApiResponse<any>;
+        return await r.json() as BOLTApiResponse<iLocation>;
     }
     /**
      * Retrieves the billTo locations data from the BOLT API.
      * @returns A promise that resolves to the billTo locations data from the BOLT API.
      */
-    public async getBillToLocations(): Promise<BOLTApiResponse<any>> {
+    public async getBillToLocations(): Promise<BOLTApiResponse<iLocation>> {
         const r = await this.makeApiRequest<undefined>(BoltApiRoutes.billToLocations);
-        return await r.json() as BOLTApiResponse<any>;
+        return await r.json() as BOLTApiResponse<iLocation>;
     }
     /**
      * Retrieves all Equipment, such as dollies, from the BOLT API.
      * @returns A promise that resolves to the billTo location data for the specified ID.
      */
-    public async getEquipment(): Promise<BOLTApiResponse<any>> {
+    public async getEquipment(): Promise<BOLTApiResponse<iEquipment>> {
         const r = await this.makeApiRequest<undefined>(BoltApiRoutes.equipment);
-        return await r.json() as BOLTApiResponse<any>;
+        return await r.json() as BOLTApiResponse<iEquipment>;
     }
     /**
      * Retrieves all segments for a specific load from the BOLT API.
@@ -203,7 +204,7 @@ export class BOLTApi {
      * Retrieves all trailers from the BOLT API.
      * @returns A promise that resolves to the trailers data from the BOLT API.
      */
-    public async getTrailers(): Promise<BOLTApiResponse<any>> {
+    public async getTrailers(): Promise<BOLTApiResponse<iEquipment>> {
         const r = await this.makeApiRequest<undefined>(BoltApiRoutes.trailers);
         return await r.json() as BOLTApiResponse<any>;
     }
@@ -246,9 +247,9 @@ export class BOLTApi {
      * Retrieves all users from the BOLT API.
      * @returns A promise that resolves to the users data from the BOLT API.
      */
-    public async getUsers(): Promise<BOLTApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.users);
-        return await r.json() as BOLTApiResponse<any>;
+    public async getUsers(): Promise<BOLTApiResponse<iUserStandard>> {
+        const r = await this.makeApiRequest<undefined>(BoltApiRoutes.users);
+        return await r.json() as BOLTApiResponse<iUserStandard>;
     }
     /**
      * @private
