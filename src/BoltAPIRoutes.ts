@@ -115,7 +115,7 @@ export const BoltApiRoutes = {
     description: 'Retrieves all equipment, dollies, containers, etc., in the database.',
   } as BoltApiRoute,
   segments:{
-    path: '/segments/',
+    path: '/loads/segments/',
     method: BOLTApiRouteMethods.GET,
     description: 'Retrieves all segments for a specific load.',
     params: [':load_id'], // Parameter for load ID

@@ -1,0 +1,18 @@
+{
+  "name": "bolt-sdk",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "module": "index.ts",
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "private": true,
+  "scripts": {
+    "start": " bun run index.ts",
+    "dev": "bun --watch index.ts"
+  },
+  "type": "module"
+}
