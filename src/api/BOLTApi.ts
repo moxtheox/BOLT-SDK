@@ -7,12 +7,13 @@ interface ApiResponse<T> {
   type: string;
 }
 
-enum BOLTApiLoadBoardShipmentStatus {
+export enum BOLTApiLoadBoardShipmentStatus {
   ALL = 'all',
   IN_TRANSIT = 'intransit',
   PENDING = 'pending',
   RECENTLY_COMPLETED = 'recently_completed',
   SCHEDULED = 'scheduled',
+  ALL_ASSIGNED = 'intransit,scheduled',
 }
 
 export class BOLTApi {
@@ -105,8 +106,8 @@ export class BOLTApi {
      */
     public async GetLoadBoard(
         status: BOLTApiLoadBoardShipmentStatus = BOLTApiLoadBoardShipmentStatus.ALL): Promise<ApiResponse<any>> {
-        const r = await this.makeApiRequest<any>(BoltApiRoutes.loadBoardShipments, undefined, status);
-        return await r.json() as ApiResponse<any>;
+        const r = await this.makeApiRequest<any[]>(BoltApiRoutes.loadBoardShipments, undefined, status);
+        return await r.json() as ApiResponse<any[]>;
     }
     /**
      * Retrieves user data by user ID from the BOLT API.
@@ -189,7 +190,7 @@ export class BOLTApi {
      * @returns Load segments for the specified load ID.
      * @throws {Error} If the loadId is not a positive number.
      */
-    public async getSegments(loadId: number): Promise<ApiResponse<any>> {
+    public async getLoadSegmentsById(loadId: number): Promise<ApiResponse<any>> {
         if(!this.validateIdNumber(loadId)) {
             throw new Error('Invalid loadId. It must be a positive number.');
         }
