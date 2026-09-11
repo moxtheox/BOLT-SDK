@@ -334,6 +334,4 @@ export class BOLTApi {
             headers: this.makeStdHeaders(includeAuth)
         };
     }
-
-    
 }
