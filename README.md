@@ -107,15 +107,15 @@ The `BOLTApi` class exposes strongly typed asynchronous methods corresponding to
 ## Repository Structure
 
 ```
-BOLT-SDK/
-        ├──src/
-              ├── BOLTApi.ts                     # Core SDK client class
-              ├── BoltAPIRoutes.ts               # Route manifest & HTTP method enums
-              ├── BOLTApiResponseInterface.ts    # Standard API response wrappers
-              └── interfaces/
-                 ├── BOLTInterfaces.ts          # Core entity models (Stops, Trucks, Locations, Rules)
-                 ├── boltLoadSegment.ts         # Load segment composite interfaces
-                 └── BOLTUserInfo.ts            # User profile, Equipment, HOS, and Permission models
+.
+├──src/
+      ├── BOLTApi.ts                     # Core SDK client class
+      ├── BoltAPIRoutes.ts               # Route manifest & HTTP method enums
+      ├── BOLTApiResponseInterface.ts    # Standard API response wrappers
+      └── interfaces/
+          ├── BOLTInterfaces.ts          # Core entity models (Stops, Trucks, Locations, Rules)
+          ├── boltLoadSegment.ts         # Load segment composite interfaces
+          └── BOLTUserInfo.ts            # User profile, Equipment, HOS, and Permission models
 ```
 
 ---
